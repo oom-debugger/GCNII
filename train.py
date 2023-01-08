@@ -11,6 +11,9 @@ from utils import *
 from model import *
 import uuid
 
+from riemannian.optimizer.radam import RiemannianAdam
+
+
 # Training settings
 parser = argparse.ArgumentParser()
 parser.add_argument('--seed', type=int, default=42, help='Random seed.')
@@ -28,6 +31,11 @@ parser.add_argument('--alpha', type=float, default=0.1, help='alpha_l')
 parser.add_argument('--lamda', type=float, default=0.5, help='lamda.')
 parser.add_argument('--variant', action='store_true', default=False, help='GCN* model.')
 parser.add_argument('--test', action='store_true', default=False, help='evaluation on test set.')
+
+parser.add_argument('--optimizer', type=str, default='adam')
+parser.add_argument('--c', type=float, default=None)
+parser.add_argument('--scale', type=float, default=None)
+    
 args = parser.parse_args()
 random.seed(args.seed)
 np.random.seed(args.seed)
@@ -50,9 +58,18 @@ model = GCNII(nfeat=features.shape[1],
                 dropout=args.dropout,
                 lamda = args.lamda, 
                 alpha=args.alpha,
-                variant=args.variant).to(device)
+                variant=args.variant,
+                curvature=args.c,
+                scale=args.scale).to(device)
 
-optimizer = optim.Adam([
+if args.optimizer == 'adam':
+    optimiser_cls = optim.Adam
+elif args.optimizer == 'radam':
+    optimiser_cls = RiemannianAdam
+else:
+    raise NotImplementedError('%s optimiser has not been implemented!' % args.optimizer)
+
+optimizer = optimiser_cls([
                         {'params':model.params1,'weight_decay':args.wd1},
                         {'params':model.params2,'weight_decay':args.wd2},
                         ],lr=args.lr)

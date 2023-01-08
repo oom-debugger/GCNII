@@ -5,6 +5,9 @@ import numpy as np
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 
+from riemannian.manifolds.poincare import PoincareBall
+
+
 class GraphConvolution(nn.Module):
 
     def __init__(self, in_features, out_features, residual=False, variant=False):
@@ -39,7 +42,9 @@ class GraphConvolution(nn.Module):
         return output
 
 class GCNII(nn.Module):
-    def __init__(self, nfeat, nlayers,nhidden, nclass, dropout, lamda, alpha, variant):
+    def __init__(self, nfeat, nlayers,nhidden, nclass, dropout, lamda, alpha, variant,
+                 curvature=None,
+                 scale=1):
         super(GCNII, self).__init__()
         self.convs = nn.ModuleList()
         for _ in range(nlayers):
@@ -54,6 +59,11 @@ class GCNII(nn.Module):
         self.alpha = alpha
         self.lamda = lamda
 
+        self.c = curvature
+        self.scale = scale
+        if self.c:
+            print ('Hyperbolic Normalization is applied to the model with curevature {%s} and scale {%s}' % (self.c, self.scale))
+
     def forward(self, x, adj):
         _layers = []
         x = F.dropout(x, self.dropout, training=self.training)
@@ -64,10 +74,16 @@ class GCNII(nn.Module):
             layer_inner = self.act_fn(con(layer_inner,adj,_layers[0],self.lamda,self.alpha,i+1))
         layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
         layer_inner = self.fcs[-1](layer_inner)
+        ############################################################
+        if self.c:
+            layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
+        ############################################################
         return F.log_softmax(layer_inner, dim=1)
 
 class GCNIIppi(nn.Module):
-    def __init__(self, nfeat, nlayers,nhidden, nclass, dropout, lamda, alpha,variant):
+    def __init__(self, nfeat, nlayers,nhidden, nclass, dropout, lamda, alpha,variant,
+                 curvature=None,
+                 scale=1):
         super(GCNIIppi, self).__init__()
         self.convs = nn.ModuleList()
         for _ in range(nlayers):
@@ -81,6 +97,11 @@ class GCNIIppi(nn.Module):
         self.alpha = alpha
         self.lamda = lamda
 
+        self.c = curvature
+        self.scale = scale
+        if self.c:
+            print ('Hyperbolic Normalization is applied to the model with curevature {%s} and scale {%s}' % (self.c, self.scale))
+
     def forward(self, x, adj):
         _layers = []
         x = F.dropout(x, self.dropout, training=self.training)
@@ -91,6 +112,10 @@ class GCNIIppi(nn.Module):
             layer_inner = self.act_fn(con(layer_inner,adj,_layers[0],self.lamda,self.alpha,i+1))
         layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
         layer_inner = self.sig(self.fcs[-1](layer_inner))
+        ############################################################
+        if self.c:
+            layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
+        ############################################################
         return layer_inner
 
 
