@@ -65,6 +65,7 @@ class GCNII(nn.Module):
             print ('Hyperbolic Normalization is applied to the model with curevature {%s} and scale {%s}' % (self.c, self.scale))
 
     def forward(self, x, adj):
+        cont = True
         _layers = []
         x = F.dropout(x, self.dropout, training=self.training)
         layer_inner = self.act_fn(self.fcs[0](x))
@@ -73,7 +74,8 @@ class GCNII(nn.Module):
             layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
             layer_inner = self.act_fn(con(layer_inner,adj,_layers[0],self.lamda,self.alpha,i+1))
             ############################################################
-            if self.c:
+            if self.c and (2*i > len(self.convs)) and cont:
+                cont= False
                 layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
             ############################################################
         layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
