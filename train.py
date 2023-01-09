@@ -60,7 +60,8 @@ model = GCNII(nfeat=features.shape[1],
                 alpha=args.alpha,
                 variant=args.variant,
                 curvature=args.c,
-                scale=args.scale).to(device)
+                scale=args.scale,
+                ).to(device)
 
 if args.optimizer == 'adam':
     optimiser_cls = optim.Adam
