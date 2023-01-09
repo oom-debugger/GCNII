@@ -72,12 +72,13 @@ class GCNII(nn.Module):
         for i,con in enumerate(self.convs):
             layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
             layer_inner = self.act_fn(con(layer_inner,adj,_layers[0],self.lamda,self.alpha,i+1))
+            ############################################################
+            if self.c:
+                layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
+            ############################################################
         layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
         layer_inner = self.fcs[-1](layer_inner)
-        ############################################################
-        if self.c:
-            layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
-        ############################################################
+
         return F.log_softmax(layer_inner, dim=1)
 
 class GCNIIppi(nn.Module):
