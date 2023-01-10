@@ -147,6 +147,7 @@ for i in range(0,10):
 
 print("AVG Test" if args.test else "AVG Val","acc.:{:.1f}".format(np.mean(acc_lst)*100))
 print("MAX Test" if args.test else "MAX Val","acc.:{:.1f}".format(np.max(acc_lst)*100))
+print("std Test" if args.test else "std Val","acc.:{:.1f}".format(np.std(acc_lst)*100))
 
 
 
