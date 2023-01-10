@@ -145,8 +145,8 @@ for i in range(0,10):
     print("Test" if args.test else "Val","acc.:{:.1f}".format(acc*100))
     acc_lst.append(acc)
 
-print("AVG Test" if args.test else "AVG Val","acc.:{:.1f}".format(statistics.mean(acc_lst)*100))
-print("MAX Test" if args.test else "MAX Val","acc.:{:.1f}".format(statistics.max(acc_lst)*100))
+print("AVG Test" if args.test else "AVG Val","acc.:{:.1f}".format(np.mean(acc_lst)*100))
+print("MAX Test" if args.test else "MAX Val","acc.:{:.1f}".format(np.max(acc_lst)*100))
 
 
 
