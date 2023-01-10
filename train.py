@@ -145,7 +145,7 @@ for i in range(0,10):
     print("Test" if args.test else "Val","acc.:{:.1f}".format(acc*100))
     acc_lst.append(acc)
 
-print("Test" if args.test else "Val","acc.:{:.1f}".format(statistics.mean(acc_lst)*100))
+print("AVG Test" if args.test else "AVG Val","acc.:{:.1f}".format(statistics.mean(acc_lst)*100))
 
 
 
