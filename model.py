@@ -71,17 +71,13 @@ class GCNII(nn.Module):
         layer_inner = self.act_fn(self.fcs[0](x))
         _layers.append(layer_inner)
         for i,con in enumerate(self.convs):
-            inner_val = F.dropout(layer_inner, self.dropout, training=self.training)
-            inner_val = con(inner_val,adj,_layers[0],self.lamda,self.alpha,i+1)
-            inner_val = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(inner_val, self.c), c=self.c), c=self.c)
-            layer_inner = self.act_fn(inner_val + layer_inner)
-# =============================================================================
-#             ############################################################
-#             if self.c and (2*i >= len(self.convs)) and cont:
-#                 cont= False
-#                 layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
-#             ############################################################
-# =============================================================================
+            layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
+            layer_inner = self.act_fn(con(layer_inner,adj,_layers[0],self.lamda,self.alpha,i+1))
+            ############################################################
+            if self.c and (2*i >= len(self.convs)) and cont:
+                cont= False
+                layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
+            ############################################################
         layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
         layer_inner = self.fcs[-1](layer_inner)
 
