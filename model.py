@@ -110,14 +110,20 @@ class GCNIIppi(nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         layer_inner = self.act_fn(self.fcs[0](x))
         _layers.append(layer_inner)
+        cont = True
         for i,con in enumerate(self.convs):
             layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
             layer_inner = self.act_fn(con(layer_inner,adj,_layers[0],self.lamda,self.alpha,i+1))
+            #######################################################
+            if self.c and (2*i >= len(self.convs)) and cont:
+                cont= False
+                layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
+            #######################################################
         layer_inner = F.dropout(layer_inner, self.dropout, training=self.training)
         layer_inner = self.sig(self.fcs[-1](layer_inner))
         ############################################################
-        if self.c:
-            layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
+#        if self.c:
+#            layer_inner = self.scale * PoincareBall.proj(PoincareBall.expmap0(PoincareBall.proj_tan0(layer_inner, self.c), c=self.c), c=self.c)
         ############################################################
         return layer_inner
 
